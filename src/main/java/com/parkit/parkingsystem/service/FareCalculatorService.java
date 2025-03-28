@@ -19,7 +19,11 @@ public class FareCalculatorService {
         // Calcul de la durée en heures (millisecondes converties en heures)
         double durationHours = durationMillis / (1000.0 * 60 * 60);
         
-
+      //Si la durée est inférieure à 30 minutes, on considère que la durée est de 0 heure pour que le ticket soit gratuit
+		if (durationHours < 0.5) {   
+			durationHours = 0;
+		}
+        
         switch (ticket.getParkingSpot().getParkingType()){
             case CAR: {
                 ticket.setPrice(durationHours * Fare.CAR_RATE_PER_HOUR);
