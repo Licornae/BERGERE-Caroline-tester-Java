@@ -32,6 +32,15 @@ public class ParkingService {
             ParkingSpot parkingSpot = getNextParkingNumberIfAvailable();
             if(parkingSpot !=null && parkingSpot.getId() > 0){
                 String vehicleRegNumber = getVehichleRegNumber();
+                
+                // Vérifie si le véhicule est récurrent (nombre de tickets > 0)
+                boolean isRecurring = ticketDAO.getNbTicket(vehicleRegNumber) > 0;
+                if (isRecurring) {
+                    System.out.println("Heureux de vous revoir ! En tant qu’utilisateur régulier de notre parking, vous allez obtenir une remise de 5%");
+                } else {
+                    System.out.println("Bienvenue ! Le stationnement est gratuit pour moins de 30 minutes");
+                }
+        
                 parkingSpot.setAvailable(false);
                 parkingSpotDAO.updateParking(parkingSpot);//allot this parking space and mark it's availability as false
 
@@ -53,7 +62,7 @@ public class ParkingService {
             logger.error("Unable to process incoming vehicle",e);
         }
     }
-
+    
     private String getVehichleRegNumber() throws Exception {
         System.out.println("Please type the vehicle registration number and press enter key");
         return inputReaderUtil.readVehicleRegistrationNumber();
@@ -97,13 +106,19 @@ public class ParkingService {
         }
     }
 
-    public void processExitingVehicle() {
+    public void processExitingVehicle() { //Implémentaer procéssus si discount ou non 
         try{
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
             Date outTime = new Date();
             ticket.setOutTime(outTime);
-            fareCalculatorService.calculateFare(ticket);
+
+            // Vérifie si le véhicule est récurrent (nombre de tickets > 0)
+            boolean discount = ticketDAO.getNbTicket(vehicleRegNumber) > 0;
+
+            // Calculer le tarif avec ou sans réduction
+            fareCalculatorService.calculateFare(ticket, discount);
+            
             if(ticketDAO.updateTicket(ticket)) {
                 ParkingSpot parkingSpot = ticket.getParkingSpot();
                 parkingSpot.setAvailable(true);

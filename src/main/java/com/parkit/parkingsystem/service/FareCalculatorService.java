@@ -4,8 +4,13 @@ import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.model.Ticket;
 
 public class FareCalculatorService {
-
-    public void calculateFare(Ticket ticket){
+	
+    // Méthode pour le calcul standard (sans réduction)
+    public void calculateFare(Ticket ticket) {
+        calculateFare(ticket, false);
+    }
+    
+    public void calculateFare(Ticket ticket, boolean discount){ 
         if( (ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime())) ){
             throw new IllegalArgumentException("Out time provided is incorrect:"+ticket.getOutTime().toString());
         }
@@ -19,7 +24,7 @@ public class FareCalculatorService {
         // Calcul de la durée en heures (millisecondes converties en heures)
         double durationHours = durationMillis / (1000.0 * 60 * 60);
         
-      //Si la durée est inférieure à 30 minutes, on considère que la durée est de 0 heure pour que le ticket soit gratuit
+        //Si la durée est inférieure à 30 minutes, on considère que la durée est de 0 heure pour que le ticket soit gratuit
 		if (durationHours < 0.5) {   
 			durationHours = 0;
 		}
@@ -35,5 +40,10 @@ public class FareCalculatorService {
             }
             default: throw new IllegalArgumentException("Unkown Parking Type");
         }
+        
+        //Si le client a une réduction, on applique une réduction de 5% sur le prix total
+		if (discount) {
+			ticket.setPrice(ticket.getPrice() * 0.95);
+		}
     }
 }
