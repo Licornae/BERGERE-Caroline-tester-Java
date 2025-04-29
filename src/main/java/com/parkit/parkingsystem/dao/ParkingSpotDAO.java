@@ -55,5 +55,27 @@ public class ParkingSpotDAO {
             dataBaseConfig.closeConnection(con);
         }
     }
+    
+    public ParkingSpot getParkingSpot(int parkingNumber) {
+		Connection con = null;
+		ParkingSpot parkingSpot = null;
+		try {
+			con = dataBaseConfig.getConnection();
+			PreparedStatement ps = con.prepareStatement(DBConstants.GET_PARKING_SPOT);
+			ps.setInt(1, parkingNumber);                                                   
+			ResultSet rs = ps.executeQuery();                                              
+			if (rs.next()) {                                                               
+				parkingSpot = new ParkingSpot(rs.getInt("parking_number"), ParkingType.valueOf(rs.getString("type")), rs.getBoolean("available"));
+			}
+			dataBaseConfig.closeResultSet(rs);
+			dataBaseConfig.closePreparedStatement(ps);
+		} catch (Exception ex) {
+			logger.error("Error fetching parking spot", ex);
+		} finally {
+			dataBaseConfig.closeConnection(con);
+		}
+		return parkingSpot;
+	}
+
 
 }

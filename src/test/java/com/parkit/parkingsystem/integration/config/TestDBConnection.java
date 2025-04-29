@@ -13,7 +13,6 @@ public class TestDBConnection {
 	
 	@Test
 	 void testGetConnection() {
-        // Teste si la connexion peut être établie sans exception
         Connection connection = null;
      try {
         connection = dataBaseConfig.getConnection();
@@ -22,7 +21,6 @@ public class TestDBConnection {
     } catch (Exception e) {
         fail("Une exception a été levée lors de la tentative de connexion : " + e.getMessage());
     } finally {
-        // Ferme la connexion une fois le test terminé
         if (connection != null) {
             try {
                 connection.close();

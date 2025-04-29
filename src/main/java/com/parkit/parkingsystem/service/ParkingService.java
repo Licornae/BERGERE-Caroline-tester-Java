@@ -33,7 +33,6 @@ public class ParkingService {
             if(parkingSpot !=null && parkingSpot.getId() > 0){
                 String vehicleRegNumber = getVehichleRegNumber();
                 
-                // Vérifie si le véhicule est récurrent (nombre de tickets > 0)
                 boolean isRecurring = ticketDAO.getNbTicket(vehicleRegNumber) > 0;
                 if (isRecurring) {
                     System.out.println("Heureux de vous revoir ! En tant qu’utilisateur régulier de notre parking, vous allez obtenir une remise de 5%");
@@ -113,10 +112,8 @@ public class ParkingService {
             Date outTime = new Date();
             ticket.setOutTime(outTime);
 
-            // Vérifie si le véhicule est récurrent (nombre de tickets > 0)
             boolean discount = ticketDAO.getNbTicket(vehicleRegNumber) > 0;
 
-            // Calculer le tarif avec ou sans réduction
             fareCalculatorService.calculateFare(ticket, discount);
             
             if(ticketDAO.updateTicket(ticket)) {

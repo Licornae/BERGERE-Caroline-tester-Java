@@ -78,8 +78,8 @@ public class TicketDAO {
             PreparedStatement ps = con.prepareStatement(DBConstants.GET_NB_TICKET);
             ps.setString(1, vehicleRegNumber);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) {                                                                 //Déplace le curseur à la première ligne du résultat. Si un résultat existe (au moins une ligne), il renvoie true. Sinon, il renvoie false.
-                count = rs.getInt(1);                                                        //Extrait la valeur de la première colonne soit le résultat de select count(*)
+            if (rs.next()) {                                                                 
+                count = rs.getInt(1);                                                        
             }
             dataBaseConfig.closeResultSet(rs);
             dataBaseConfig.closePreparedStatement(ps);
@@ -108,4 +108,38 @@ public class TicketDAO {
         }
         return false;
     }
+    
+    public Ticket getTicketWithOutTime(String vehicleRegNumber) {
+        Connection con = null;
+        Ticket ticket = null;
+        try {
+            con = dataBaseConfig.getConnection();
+            String sql = "SELECT t.PARKING_NUMBER, t.ID, t.PRICE, t.IN_TIME, t.OUT_TIME, p.TYPE " +
+                         "FROM ticket t, parking p " +
+                         "WHERE p.parking_number = t.parking_number " +
+                         "AND t.VEHICLE_REG_NUMBER = ? " +
+                         "ORDER BY t.IN_TIME DESC LIMIT 1";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ps.setString(1, vehicleRegNumber);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                ticket = new Ticket();
+                ParkingSpot parkingSpot = new ParkingSpot(rs.getInt(1), ParkingType.valueOf(rs.getString(6)), false);
+                ticket.setParkingSpot(parkingSpot);
+                ticket.setId(rs.getInt(2));
+                ticket.setVehicleRegNumber(vehicleRegNumber);
+                ticket.setPrice(rs.getDouble(3));
+                ticket.setInTime(rs.getTimestamp(4));
+                ticket.setOutTime(rs.getTimestamp(5));
+            }
+            dataBaseConfig.closeResultSet(rs);
+            dataBaseConfig.closePreparedStatement(ps);
+        } catch (Exception ex) {
+            logger.error("Error fetching ticket with outTime", ex);
+        } finally {
+            dataBaseConfig.closeConnection(con);
+        }
+        return ticket;
+    }
+
 }
