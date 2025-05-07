@@ -70,17 +70,17 @@ public class ParkingDataBaseIT {
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         parkingService.processIncomingVehicle();
         
-        Ticket ticket = ticketDAO.getTicket(VEH_REG); 							    //Récupérer le ticket en BDD
+        Ticket ticket = ticketDAO.getTicket(VEH_REG); 						
         
-        assertNotNull(ticket, "Le ticket doit être enregistré en BDD");             //Vérifier qu'un ticket existe en base pour ce véhicule
+        assertNotNull(ticket, "Le ticket doit être enregistré en BDD");             
 
-        assertNotNull(ticket.getInTime(), "L'heure d'entrée doit être renseignée"); //Vérifier que l'heure d'entrée est bien enregistrée
+        assertNotNull(ticket.getInTime(), "L'heure d'entrée doit être renseignée"); 
         
-        ParkingSpot Spot = ticket.getParkingSpot();                                 //Récupérer la place de parking associée au ticket
-        ParkingSpot parking = parkingSpotDAO.getParkingSpot(Spot.getId());          //Récupérer la place de parking en BDD
-        boolean dispo = parking.isAvailable();                                      //Vérifier que la place n'est plus disponible
+        ParkingSpot Spot = ticket.getParkingSpot();                                
+        ParkingSpot parking = parkingSpotDAO.getParkingSpot(Spot.getId());        
+        boolean dispo = parking.isAvailable();                                    
         assertFalse(dispo, "La place ne doit plus être disponible");
-        assertEquals(parking.getParkingType(), ParkingType.CAR);                    //Vérifier que la place occupé est bien de type voiture)
+        assertEquals(parking.getParkingType(), ParkingType.CAR);                    
       
     }
 
@@ -88,31 +88,24 @@ public class ParkingDataBaseIT {
     public void testParkingLotExit() {
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
 
-        // Simule l’entrée
         parkingService.processIncomingVehicle();
 
-        // Récupère le ticket après l’entrée
         Ticket ticket = ticketDAO.getTicket(VEH_REG);
         assertNotNull(ticket, "Le ticket doit exister après l'entrée !");
         java.util.Date inTime = ticket.getInTime();
 
-        // Simule une sortie 1h plus tard
         Date outTime = new Date(inTime.getTime() + 60 * 60 * 1000);
         ticket.setOutTime(outTime);
 
-        // Calcule le prix manuellement
-        new FareCalculatorService().calculateFare(ticket, false); // pas de réduction pour ce test
+        new FareCalculatorService().calculateFare(ticket, false);
 
-        // Met à jour le ticket avec outTime et le prix
         boolean updated = ticketDAO.updateTicket(ticket);
         assertTrue(updated, "Le ticket doit être mis à jour correctement");
 
-        // Récupère le ticket avec outTime renseigné
         Ticket updatedTicket = ticketDAO.getTicketWithOutTime(VEH_REG);
         assertNotNull(updatedTicket, "Le ticket doit exister après la sortie !");
         assertNotNull(updatedTicket.getOutTime(), "L'heure de sortie doit être renseignée !");
 
-        // Vérifie le tarif attendu (1.5 € pour 1h de voiture)
         double expectedPrice = 1.5;
         assertEquals(expectedPrice, updatedTicket.getPrice(), 0.01, "Le prix pour 1h de voiture doit être correct");
     }
@@ -121,27 +114,22 @@ public class ParkingDataBaseIT {
     public void testParkingLotExitRecurringUser() {
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
 
-        // Simuler l'historique : insertion d’un ancien ticket
         Ticket oldTicket = new Ticket();
         oldTicket.setParkingSpot(new ParkingSpot(1, ParkingType.CAR, false));
         oldTicket.setVehicleRegNumber(VEH_REG);
-        oldTicket.setInTime(new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000)); // il y a 1 jour
-        oldTicket.setOutTime(new Date(System.currentTimeMillis() - 23 * 60 * 60 * 1000)); // 1h après
+        oldTicket.setInTime(new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000)); 
+        oldTicket.setOutTime(new Date(System.currentTimeMillis() - 23 * 60 * 60 * 1000));
         oldTicket.setPrice(1.5);
         ticketDAO.saveTicket(oldTicket);
 
-        // Nouvelle entrée
         parkingService.processIncomingVehicle();
 
-        // Récupération du ticket en BDD
         Ticket ticket = ticketDAO.getTicket(VEH_REG);
         assertNotNull(ticket);
 
-        // Simuler 1h de stationnement en modifiant inTime
         Date simulatedInTime = new Date(System.currentTimeMillis() - 60 * 60 * 1000);
         ticket.setInTime(simulatedInTime);
 
-        // Update uniquement inTime via requête directe (à défaut de méthode existante)
         try (Connection con = dataBaseTestConfig.getConnection()) {
             PreparedStatement ps = con.prepareStatement("UPDATE ticket SET IN_TIME = ? WHERE ID = ?");
             ps.setTimestamp(1, new Timestamp(simulatedInTime.getTime()));
@@ -152,16 +140,13 @@ public class ParkingDataBaseIT {
             fail("Erreur lors de la mise à jour de inTime dans la BDD : " + e.getMessage());
         }
 
-        // Sortie (calcul du prix avec remise)
         parkingService.processExitingVehicle();
 
-        // Vérifie le ticket après la sortie
         Ticket updatedTicket = ticketDAO.getTicketWithOutTime(VEH_REG);
         assertNotNull(updatedTicket.getOutTime());
 
-        double expectedPrice = 1.5 * 0.95; // remise de 5%
+        double expectedPrice = 1.5 * 0.95; 
         assertEquals(expectedPrice, updatedTicket.getPrice(), 0.01, "Le prix pour un utilisateur récurrent doit inclure la remise de 5%");
     }
-
 
 }

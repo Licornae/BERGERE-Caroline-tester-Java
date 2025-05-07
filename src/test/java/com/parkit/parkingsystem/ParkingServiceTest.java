@@ -70,7 +70,6 @@ public class ParkingServiceTest {
     	
     	parkingService.processIncomingVehicle();
     	
-        // Vérification ParkingSpot
         ArgumentCaptor<ParkingSpot> spotCaptor = ArgumentCaptor.forClass(ParkingSpot.class); 
         verify(parkingSpotDAO).updateParking(spotCaptor.capture());							
         ParkingSpot spotUsed = spotCaptor.getValue();										 
@@ -79,7 +78,6 @@ public class ParkingServiceTest {
         assertFalse(spotUsed.isAvailable());												 
         assertEquals(ParkingType.CAR, spotUsed.getParkingType());						     
 
-        // Vérification Ticket
         ArgumentCaptor<Ticket> ticketCaptor = ArgumentCaptor.forClass(Ticket.class);         
         verify(ticketDAO).saveTicket(ticketCaptor.capture());							     
         Ticket savedTicket = ticketCaptor.getValue();                                        
@@ -102,14 +100,12 @@ public class ParkingServiceTest {
 
         parkingService.processExitingVehicle();
         
-        // Vérification Ticket
         ArgumentCaptor<Ticket> cap = ArgumentCaptor.forClass(Ticket.class);                 				
         verify(ticketDAO, times(1)).updateTicket(cap.capture());                            				
         Ticket updatedTicket = cap.getValue();                                              				
         
         assertNotNull(updatedTicket.getOutTime(), "Pas d'heure de sortie renseignée");      				
         
-     // Vérification ParkingSpot
         ArgumentCaptor<ParkingSpot> parkingSpotCaptor = ArgumentCaptor.forClass(ParkingSpot.class); 		
         verify(parkingSpotDAO, times(1)).updateParking(parkingSpotCaptor.capture());         				
         ParkingSpot updatedSpot = parkingSpotCaptor.getValue();									    		
@@ -215,4 +211,5 @@ public class ParkingServiceTest {
 
         parkingServiceSpy.processIncomingVehicle();
     }
+    
 }

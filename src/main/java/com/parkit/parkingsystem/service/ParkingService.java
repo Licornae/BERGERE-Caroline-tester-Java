@@ -105,7 +105,7 @@ public class ParkingService {
         }
     }
 
-    public void processExitingVehicle() { //Implémentaer procéssus si discount ou non 
+    public void processExitingVehicle() {
         try{
             String vehicleRegNumber = getVehichleRegNumber();
             Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
